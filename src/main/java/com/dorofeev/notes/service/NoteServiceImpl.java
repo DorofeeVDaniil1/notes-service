@@ -29,10 +29,10 @@ public class NoteServiceImpl implements NoteService {
     @Override
     @Transactional
     public NoteResponse createNote(CreateNoteRequest request) {
-        var note = noteMapper.toEntity(request);
+        Note note = noteMapper.toEntity(request);
         note.setTags(normalizeTags(note.getTags()));
 
-        var savedNote = noteRepository.save(note);
+        Note savedNote = noteRepository.save(note);
         log.info("Note created id={}", savedNote.getId());
 
         return noteMapper.toResponse(savedNote);
@@ -62,13 +62,13 @@ public class NoteServiceImpl implements NoteService {
     @Override
     @Transactional
     public NoteResponse updateNote(Long id, UpdateNoteRequest request) {
-        var note = noteRepository.findById(id)
-                .orElseThrow(() -> noteNotFound(id));
+        Optional<Note> noteOptional = noteRepository.findById(id);
+        Note note = noteOptional.orElseThrow(() -> noteNotFound(id));
 
         noteMapper.updateEntity(request, note);
         note.setTags(normalizeTags(note.getTags()));
 
-        var savedNote = noteRepository.save(note);
+        Note savedNote = noteRepository.save(note);
         log.info("Note updated id={}", savedNote.getId());
 
         return noteMapper.toResponse(savedNote);
@@ -77,7 +77,8 @@ public class NoteServiceImpl implements NoteService {
     @Override
     @Transactional
     public void deleteNote(Long id) {
-        if (!noteRepository.existsById(id)) {
+        Optional<Note> noteOptional = noteRepository.findById(id);
+        if (noteOptional.isEmpty()) {
             throw noteNotFound(id);
         }
 
