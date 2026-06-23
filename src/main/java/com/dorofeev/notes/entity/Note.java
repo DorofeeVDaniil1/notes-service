@@ -54,7 +54,7 @@ public class Note {
 
     @PrePersist
     void prePersist() {
-        var now = Instant.now();
+        Instant now = Instant.now();
         createdAt = now;
         updatedAt = now;
     }

@@ -30,7 +30,7 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException exception,
             HttpServletRequest request
     ) {
-        var details = exception.getBindingResult()
+        Map<String, String> details = exception.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .collect(Collectors.toMap(
@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
             ConstraintViolationException exception,
             HttpServletRequest request
     ) {
-        var details = exception.getConstraintViolations()
+        Map<String, String> details = exception.getConstraintViolations()
                 .stream()
                 .collect(Collectors.toMap(
                         violation -> violation.getPropertyPath().toString(),
@@ -63,7 +63,10 @@ public class GlobalExceptionHandler {
             MethodArgumentTypeMismatchException exception,
             HttpServletRequest request
     ) {
-        var details = Map.of(exception.getName(), "Invalid value: " + String.valueOf(exception.getValue()));
+        Map<String, String> details = Map.of(
+                exception.getName(),
+                "Invalid value: " + String.valueOf(exception.getValue())
+        );
 
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid request parameter", request, details);
     }
@@ -74,7 +77,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request,
             Map<String, String> details
     ) {
-        var response = new ApiErrorResponse(
+        ApiErrorResponse response = new ApiErrorResponse(
                 Instant.now(),
                 status.value(),
                 status.getReasonPhrase(),

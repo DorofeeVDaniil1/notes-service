@@ -41,22 +41,22 @@ class NoteServiceImplTest {
 
     @Test
     void createNote_shouldNormalizeTagsAndReturnResponse() {
-        var request = new CreateNoteRequest("Title", "Content", Set.of(" Work ", "java", "JAVA"));
-        var note = Note.builder()
+        CreateNoteRequest request = new CreateNoteRequest("Title", "Content", Set.of(" Work ", "java", "JAVA"));
+        Note note = Note.builder()
                 .title("Title")
                 .content("Content")
                 .tags(new LinkedHashSet<>(request.tags()))
                 .build();
-        var savedNote = note(1L, "Title", "Content", Set.of("work", "java"));
-        var response = response(savedNote);
+        Note savedNote = note(1L, "Title", "Content", Set.of("work", "java"));
+        NoteResponse response = response(savedNote);
 
         when(noteMapper.toEntity(request)).thenReturn(note);
         when(noteRepository.save(any(Note.class))).thenReturn(savedNote);
         when(noteMapper.toResponse(savedNote)).thenReturn(response);
 
-        var result = noteService.createNote(request);
+        NoteResponse result = noteService.createNote(request);
 
-        var noteCaptor = ArgumentCaptor.forClass(Note.class);
+        ArgumentCaptor<Note> noteCaptor = ArgumentCaptor.forClass(Note.class);
         verify(noteRepository).save(noteCaptor.capture());
 
         assertThat(noteCaptor.getValue().getTags()).containsExactlyInAnyOrder("work", "java");
@@ -76,13 +76,13 @@ class NoteServiceImplTest {
 
     @Test
     void getNotes_withTag_shouldFilterByNormalizedTag() {
-        var note = note(1L, "Title", "Content", Set.of("work"));
-        var response = response(note);
+        Note note = note(1L, "Title", "Content", Set.of("work"));
+        NoteResponse response = response(note);
 
         when(noteRepository.findByTag("work")).thenReturn(List.of(note));
         when(noteMapper.toResponse(note)).thenReturn(response);
 
-        var result = noteService.getNotes(Optional.of(" Work "));
+        List<NoteResponse> result = noteService.getNotes(Optional.of(" Work "));
 
         assertThat(result).containsExactly(response);
         verify(noteRepository).findByTag("work");
@@ -91,16 +91,16 @@ class NoteServiceImplTest {
 
     @Test
     void updateNote_whenNoteExists_shouldUpdateAndReturnResponse() {
-        var request = new UpdateNoteRequest("Updated", "New content", Set.of(" Spring ", "api"));
-        var existingNote = note(1L, "Old", "Old content", Set.of("old"));
-        var savedNote = note(1L, "Updated", "New content", Set.of("spring", "api"));
-        var response = response(savedNote);
+        UpdateNoteRequest request = new UpdateNoteRequest("Updated", "New content", Set.of(" Spring ", "api"));
+        Note existingNote = note(1L, "Old", "Old content", Set.of("old"));
+        Note savedNote = note(1L, "Updated", "New content", Set.of("spring", "api"));
+        NoteResponse response = response(savedNote);
 
         when(noteRepository.findById(1L)).thenReturn(Optional.of(existingNote));
         when(noteRepository.save(existingNote)).thenReturn(savedNote);
         when(noteMapper.toResponse(savedNote)).thenReturn(response);
 
-        var result = noteService.updateNote(1L, request);
+        NoteResponse result = noteService.updateNote(1L, request);
 
         verify(noteMapper).updateEntity(request, existingNote);
         verify(noteRepository).save(existingNote);
@@ -109,7 +109,7 @@ class NoteServiceImplTest {
 
     @Test
     void deleteNote_whenNoteDoesNotExist_shouldThrowException() {
-        when(noteRepository.existsById(1L)).thenReturn(false);
+        when(noteRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> noteService.deleteNote(1L))
                 .isInstanceOf(NoteNotFoundException.class)
