@@ -1,0 +1,8 @@
+services:
+  notes-service:
+    build: .
+    container_name: notes-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: default
